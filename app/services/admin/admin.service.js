@@ -1,0 +1,372 @@
+const db = require("../../models");
+const config = require("../../config/auth.config");
+const Admin=db.admin;
+const Admininfo=db.admininfo;
+var jwt = require("jsonwebtoken");
+var bcrypt = require("bcryptjs");
+const TokenGenerator = require('uuid-token-generator');
+const tokgen2 = new TokenGenerator(256,TokenGenerator.BASE62);
+const emailservice = require('../../services/email.service');
+
+// register professional
+const register = async (req, res) => {
+   const admin = {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    password: bcrypt.hashSync(req.body.password, 8),
+    adminToken:tokgen2.generate(),
+  };
+  
+  try {
+    // Save professional in the database
+    const newAdmin = await Admin.create(admin);
+
+    // Exclude the specified fields from the output
+    const result = {
+      name: newAdmin.firstName+' '+newAdmin.lastName,
+      email: newAdmin.email,
+      token: newAdmin.token,
+      password:newAdmin.password,
+      adminToken:newAdmin.adminToken
+
+    };
+
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while creating user."
+    });
+  }
+};
+const login = async (req, res) => {
+  Admin.findOne({
+    where: {
+      email: req.body.email
+    }
+  })
+  .then(admin => {
+   if (!admin) {
+     return res.status(404).send({ message: "professional Not found." });
+   }
+   var passwordIsValid = bcrypt.compareSync(
+     req.body.password,
+     admin.password
+   );
+   if (!passwordIsValid) {
+     return res.status(401).send({
+       accessToken: null,
+       message: "Invalid Password!"
+     });
+   }
+   var adminToken = jwt.sign({ id: admin.adminToken }, config.secret, {
+     expiresIn: 86400 // 24 hours
+   });
+   var refreshtoken = jwt.sign({ id: admin.adminToken }, config.secret, {
+    expiresIn: 86400 // 24 hours
+ });
+    var fullName=`${admin.firstName} ${admin.lastName}`;
+     res.status(200).send({
+      adminToken: admin.adminToken,
+       accessToken: adminToken,
+       refreshtoken:refreshtoken,
+       fullName:fullName
+      
+     });
+  
+ })
+ .catch(err => {
+   res.status(500).send({ message: err.message });
+ });
+    
+ };
+        
+ const forgotpassword = async (req, res) => {
+   
+  Admin.findOne({
+  where: {
+   email: req.body.email,
+   adminToken:Admin.adminToken
+  }
+})
+.then(admin => {
+ if (!admin) {
+   return res.status(404).send({ message: "Email not exists." });
+ } else {
+
+const resetToken = tokgen2.generate();  
+
+Admin.update({resetToken : resetToken}, {
+    where: {adminToken:admin.adminToken }
+   
+  }).then(
+    emailservice.sendResetPasswordEmail(admin.email,resetToken)
+  )
+     
+  return res.status(200).send({ message: "Reset link send to the registered email id" });
+   
+  }  
+
+})
+.catch(err => {
+ res.status(500).send({ message: err.message });
+});
+
+};
+
+const resetpassword = async (req, res) => {
+
+  Admin.findOne({
+  where: {
+   resetToken: req.body.resetToken
+  }
+})
+.then(admin => {
+  console.log(admin);
+  if (!admin) {
+    return res.status(404).send({ message: "The reset link is not valid" });
+  }
+
+  
+
+ // Update user with new encrypted password
+ Admin.update({password : bcrypt.hashSync(req.body.password, 8)}, {
+    where: { adminToken:admin.adminToken }
+   
+  }).then(
+    emailservice.PasswordResetSuccess(admin.email,'Password Changed Successfully')
+  )
+
+  return res.status(200).send({ message: "Password Changed successfully" });
+
+})
+.catch(err => {
+  res.status(500).send({ message: err.message });
+});
+
+};
+
+const passwordreset = async (req, res) => {
+//console.log(req);
+Admin.findOne({
+  where: {
+   resetToken: req.body.resetToken
+  }
+})
+.then(admin => {
+  if (!admin) {
+    return res.status(404).send({ message: "User is not valid" });
+  }
+ 
+
+ // Update user with new encrypted password
+ Admin.update({password : bcrypt.hashSync(req.body.password, 8)}, {
+    where: { adminToken: req.body.id }
+   
+  }).then(
+    emailservice.PasswordResetSuccess(admin.email,'Password Changed Successfull')
+  )
+
+  return res.status(200).send({ message: "Password reset successfull" });
+
+})
+.catch(err => {
+  res.status(500).send({ message: err.message });
+});
+
+};  
+
+// update professional
+const updateAdmin = async (req, res) => {
+  Admin.update(
+    { photo:req.body.photo, 
+      firstName: req.body.firstName,
+      lastName: req.body.lastName
+    },
+    {
+      where: {
+        adminToken: req.body.adminToken
+      }
+    }
+  )
+    .then(rowsAffected => {
+      if (rowsAffected[0] === 0) {
+        return res.status(404).send({
+          message: "admin not found with token " + req.body.adminToken
+        });
+      }
+      res.send({
+        message: "admin was updated successfully."+ req.body.adminToken,
+       
+
+      });
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while updating the admin."
+      });
+    });
+};
+
+
+const createAdminInfo = async (req, res) => {
+  const { adminToken } = req.body;
+
+  if (!adminToken) {
+    return res.status(400).send({
+      message: "adminToken is required in the request body."
+    });
+  }
+
+  try {
+    const admin = await db.admin.findOne({
+      where: { adminToken }
+    });
+
+    if (!admin) {
+      return res.status(400).send({
+        message: `No adminToken found with token: ${adminToken}.`
+      });
+    }
+    // if (req.body.aadharNumber.toString().length !== 16) {
+    //   return res.status(400).send({
+    //     message: "Aadhar number must be 16 digits long."
+    //   });
+    // }
+
+    const admininfo = await db.admininfo.create({
+      age: req.body.age,
+      gender: req.body.gender,
+      shortDescription: req.body.shortDescription,
+      activationDate: req.body.activationDate,
+      address: req.body.address,
+      mobileNumber: req.body.mobileNumber,
+      adminId: admin.id
+    }, {
+      include: [{
+        model: db.admin,
+        attributes: ['adminToken',]
+      }],
+      attributes: { exclude: ['id', 'adminId', 'updatedAt', 'createdAt'] }
+    });
+    
+    // Change the attributes option to include the token field from the professional model
+    const admininfoWithToken = await db.admininfo.findByPk(admininfo.id, {
+      include: [{
+        model: db.admin,
+        attributes: ['adminToken',]
+      }],
+      attributes: { exclude: ['id', 'adminId', 'updatedAt', 'createdAt'] }
+    });
+    
+    if (!admininfoWithToken) {
+      return res.status(400).send({
+        message: "admin information could not be created."
+      });
+    }
+    
+    res.send({
+      message: "admin information created successfully.",
+      admininfo: admininfoWithToken
+    });
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      message: "Some error occurred while creating the admin information."
+    });
+  }
+};
+
+// update admininfo
+const updateAdminInfo = async (req, res) => {
+  const { adminToken } = req.body;
+
+  if (!adminToken) {
+    return res.status(400).send({
+      message: "adminToken is required in the request body."
+    });
+  }
+
+  try {
+    const admin = await db.admin.findOne({
+      where: { adminToken }
+    });
+
+    if (!admin) {
+      return res.status(400).send({
+        message: "No admin found with the provided adminToken."
+      });
+    }
+    db.admininfo.update({
+      age: req.body.age,
+      gender: req.body.gender,
+      shortDescription: req.body.shortDescription,
+      activationDate: req.body.activationDate,
+      address: req.body.address,
+      mobileNumber: req.body.mobileNumber,
+      adminId: admin.id
+    },
+    { where: { id: admin.id } }
+  );
+
+    if (!Admininfo) {
+      return res.status(400).send({
+        message: "admin information could not be updated."
+      });
+    }
+
+    res.send({
+      message: "admin information updated successfully.",
+      adminToken: adminToken
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: err.message || "Some error occurred while updating the professional information."
+    });
+  }
+};
+const getOneAdmin = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({
+      where: { adminToken: req.body.adminToken },
+    });
+
+    if (!admin) {
+      return res.status(404).send({
+        message: 'User not found with adminToken',
+      });
+    }
+
+    const { email, adminToken, photo, firstName, lastName } = admin;
+    const fullName = `${firstName} ${lastName}`;
+
+    res.status(200).send({
+      fullName,
+      photo,
+      email,
+      adminToken,
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: 'Error retrieving admin with adminToken',
+    });
+  }
+};
+
+
+module.exports ={
+    register,
+    login,
+    
+   //professional password
+    forgotpassword,
+    resetpassword,
+    passwordreset, 
+    updateAdmin,
+    createAdminInfo,
+    updateAdminInfo,
+    getOneAdmin
+
+}
