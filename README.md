@@ -5,7 +5,7 @@ start and follow the order with the help of other files present
 
 
 *.model.js
-import model in index.js
+import model in index.js (place it above the profile table)
 *.service.js
 *.controller.js
 *.routes.js

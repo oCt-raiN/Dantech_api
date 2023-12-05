@@ -49,13 +49,18 @@ module.exports = (sequelize, Sequelize) => {
           gst:{
             type:Sequelize.STRING
           }
-        }, {
-            indexes : [
-                {
-                    unique: true,
-                    fields: []
-                }
-            ]
-        });
+        },
+        
+        
+        // {
+        //     indexes : [
+        //         {
+        //             unique: true,
+        //             fields: []
+        //         }
+        //     ]
+        // }
+        
+        );
         return Profile;
     };

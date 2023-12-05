@@ -11,7 +11,7 @@ const emailservice = require('../../services/email.service');
 // register professional
 const register = async (req, res) => {
    const admin = {
-    firstName: req.body.firstName,
+    name: req.body.name,
     lastName: req.body.lastName,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 8),
@@ -24,7 +24,7 @@ const register = async (req, res) => {
 
     // Exclude the specified fields from the output
     const result = {
-      name: newAdmin.firstName+' '+newAdmin.lastName,
+      firstName: newAdmin.name,
       email: newAdmin.email,
       token: newAdmin.token,
       password:newAdmin.password,
@@ -40,6 +40,8 @@ const register = async (req, res) => {
     });
   }
 };
+
+
 const login = async (req, res) => {
   Admin.findOne({
     where: {
