@@ -115,7 +115,7 @@ const login = async (req, res) => {
       expiresIn: "1d"
     });
 
-    const fullName = `${user.firstName} ${user.lastName}`;
+    const fullName = `${user.clinicName}`;
 
     res.status(200).send({
       userToken: user.userToken,

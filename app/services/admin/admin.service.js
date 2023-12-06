@@ -2,11 +2,74 @@ const db = require("../../models");
 const config = require("../../config/auth.config");
 const Admin=db.admin;
 const Admininfo=db.admininfo;
+const User = db.user;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const TokenGenerator = require('uuid-token-generator');
 const tokgen2 = new TokenGenerator(256,TokenGenerator.BASE62);
 const emailservice = require('../../services/email.service');
+
+
+
+function generateUniqueId() {
+  // Generate a random 5-digit number
+  const randomDigits = Math.floor(10000 + Math.random() * 90000);
+
+  // Combine the letter 'O' with the random digits to form the ID
+  const uniqueId = 'A' + randomDigits;
+
+  return uniqueId;
+}
+
+
+// Create a user
+const userregister = async (req, res) => {
+  // const admin = await Admin.findOne({
+  //   where: { adminToken: req.body.adminToken } ,
+  //   attributes: { exclude: ['createdAt', 'updatedAt'] },
+  // });
+  // if (!admin) {
+  //   return res.status(404).send({
+  //     message: "Admin not found with token " + req.body.adminToken
+  //   });
+  // }
+
+  const clinic_id = generateUniqueId(); 
+  
+  const user = {
+  clinicid: clinic_id,
+  clinicName: req.body.name,
+  email: req.body.email,
+  address: req.body.address,
+  phonenumber: req.body.phonenumber,
+  password: bcrypt.hashSync(req.body.password, 8),
+  userToken:tokgen2.generate(),
+};
+
+try {
+  // Save professional in the database
+  const newUser = await User.create(user);
+  // Exclude the specified fields from the output
+  const result = {
+    // fullName: newUser.firstName+' '+newUser.lastName,
+    // clinicid: newUser.clinicid,
+    clinicName: newUser.clinicName,
+    address: newUser.clinicName,
+    phonenumber: newUser.phonenumber,
+    email: newUser.email,
+    password:newUser.password,
+    userToken: newUser.userToken,
+
+  };
+
+  res.send(result);
+} catch (err) {
+  res.status(500).send({
+    message:
+      err.message || "Some error occurred while creating user."
+  });
+}
+};
 
 // register professional
 const register = async (req, res) => {
@@ -361,7 +424,7 @@ const getOneAdmin = async (req, res) => {
 module.exports ={
     register,
     login,
-    
+    userregister,
    //professional password
     forgotpassword,
     resetpassword,

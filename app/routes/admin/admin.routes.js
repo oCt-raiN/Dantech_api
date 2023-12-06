@@ -33,7 +33,8 @@ module.exports = app => {
       router.put("/updateAdminInfo",admininfo.updateAdminInfo);
       // get one
       router.post("/getOneAdmin",admin.getOneAdmin);
-
+      //create user
+      router.post("/userregister",admin.createuser)
 
 
       app.use('/api/admin', router);    

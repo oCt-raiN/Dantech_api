@@ -55,3 +55,6 @@ exports.updateAdmin = (req, res) => {
 exports.getOneAdmin = (req, res) => {
   adminService.getOneAdmin(req,res);
 };
+exports.createuser = (req,res) => {
+  adminService.userregister(req,res);
+}
