@@ -5,6 +5,7 @@ const User = db.user;
 const Userinfo = db.userinfo;
 const Professional = db.professional;
 const sequelize =db.sequelize;
+const Profile = db.profile;
 const Admin = db.admin;
 const Profbooking= db.profbooking;
 const Slot = db.slot;
@@ -60,9 +61,12 @@ const register = async (req, res) => {
   userToken:tokgen2.generate(),
 };
 
+
+
 try {
   // Save professional in the database
   const newUser = await User.create(user);
+  const newprofile = await Profile.create(user);
   // Exclude the specified fields from the output
   const result = {
     // fullName: newUser.firstName+' '+newUser.lastName,
@@ -116,11 +120,12 @@ const login = async (req, res) => {
     });
 
     const fullName = `${user.clinicName}`;
+    const status = `${user.status}`
 
     res.status(200).send({
       userToken: user.userToken,
       accessToken,
-      fullName
+      fullName,status,
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -299,20 +304,24 @@ const getOneUser = async (req, res) => {
       where: { userToken: req.body.userToken },
     });
 
+    const profile = await Profile.findOne({
+      where: { clinicid: user.clinicid}
+    });
+
     if (!user) {
       return res.status(404).send({
         message: 'User not found with userToken',
       });
     }
 
-    const { email, userToken, photo, firstName, lastName } = user;
-    const fullName = `${firstName} ${lastName}`;
+    const { email, userToken, photo, clinicName, status } = user;
+    const clinicname = `${clinicName}`;
 
     res.status(200).send({
-      fullName,
+      clinicname,profile,
       photo,
       email,
-      userToken,
+      userToken,status
     });
   } catch (err) {
     res.status(500).send({

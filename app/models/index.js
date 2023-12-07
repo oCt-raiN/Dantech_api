@@ -49,6 +49,8 @@ db.profile = require("./profile/profiles.model.js")(sequelize,Sequelize);
 //   as: 'options',
 // });
 
+
+
 // SurveyForm to Questions association
 db.surveyForm.hasMany(db.questions, {
   foreignKey: 'surveyFormId',

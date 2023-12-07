@@ -2,6 +2,7 @@ const db = require("../../models");
 const config = require("../../config/auth.config");
 const { user,Sequelize } = require("../../models/index");
 const Doctor = db.doctor
+const User = db.user
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const TokenGenerator = require('uuid-token-generator');
@@ -22,10 +23,13 @@ function generateUniqueId() {
 const adddoctor = async (req, res) =>{
 
     const doctor_id = generateUniqueId();
+    const user = await User.findOne({
+        where: { userToken: req.body.userToken },
+      });
     const doctor = {
-        // clinicid: req.body.clinicid,
+        clinicid: user.clinicid,
         doctorid: doctor_id,
-        doctorname: req.body.Doctor_name,
+        doctorname: req.body.doc.Doctor_name,
     };
     try{
         const newdoctor = await Doctor.create(doctor)
@@ -43,6 +47,40 @@ const adddoctor = async (req, res) =>{
     }
 };
 
+const getdoctors =async (req, res) => {
+
+    try{
+        const user = await User.findOne({
+            where: { userToken: req.body.userToken },
+          });
+          const doctor = await Doctor.findAll({
+            where: { clinicid: user.clinicid}
+          });
+
+        //   console.log(doctor)
+          const { email, userToken, photo, clinicName, status } = user;
+          const clinicname = `${clinicName}`;
+      
+          res.status(200).send({
+            clinicname,
+            photo,
+            email,
+            userToken,status,doctor
+          });
+        } 
+    catch (err) 
+        {
+          res.status(500).send({
+            message: 'Error retrieving docotrs with userToken',
+          });
+    }
+    
+
+};
+
+
+
 module.exports ={
     adddoctor,
+    getdoctors,
 }

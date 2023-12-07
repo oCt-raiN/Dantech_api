@@ -15,4 +15,5 @@ module.exports = app =>{
       });
       
     router.post("/save",doctorcntrl.adddoc)
+    router.post("/getalldoctor",doctorcntrl.getalldoctordata)
 }
