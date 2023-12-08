@@ -68,7 +68,9 @@ exports.adminCancelUser = (req, res) => {
 exports.allUserCount = (req, res) => {
   userService.allUserCount(req,res);
 };
-
+exports.getstatususer = (req, res) => {
+  userService.getstatus(req,res);
+}
 
 
 

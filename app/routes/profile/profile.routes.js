@@ -13,7 +13,7 @@ module.exports = app => {
         next();
       });
 
-      router.post("/save",profilecntrl.profilentry)
+      router.put("/save",profilecntrl.profilentry)
     
 }
 

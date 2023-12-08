@@ -132,6 +132,36 @@ const login = async (req, res) => {
   }
 };
 
+
+
+
+const getstatus =async (req, res) => {
+
+  try{
+      const user = await User.findOne({
+          where: { userToken: req.body.userToken },
+        });
+
+      //   console.log(doctor)
+        const { email, userToken, clinicName, status } = user;
+        const clinicname = `${clinicName}`;
+    
+        res.status(200).send({
+          clinicname,
+          email,
+          userToken,status
+        });
+      } 
+  catch (err) 
+      {
+        res.status(500).send({
+          message: 'Error retrieving status with userToken',
+        });
+  }
+  
+
+};
+
  
 const forgotpassword = async (req, res) => {
   
@@ -593,5 +623,6 @@ module.exports = {
   updateUser,
   adminCancelUser,
   allUserCount,
+  getstatus
  
 };

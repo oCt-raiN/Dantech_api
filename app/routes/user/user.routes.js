@@ -65,6 +65,7 @@ module.exports = app => {
  router.put("/admincanceluser",user.adminCancelUser);
  //  user count for admin
  router.post("/allusercount",user.allUserCount);
+ router.post("/getstatus",user.getstatususer)
 
  app.use('/api/user', router);
 

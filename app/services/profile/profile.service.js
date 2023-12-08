@@ -2,6 +2,7 @@ const db = require("../../models");
 const config = require("../../config/auth.config");
 const { user,Sequelize } = require("../../models/index");
 const Profile = db.profile
+const User = db.user
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const TokenGenerator = require('uuid-token-generator');
@@ -9,55 +10,46 @@ const tokgen2 = new TokenGenerator(256,TokenGenerator.BASE62);
 const emailservice = require('../email.service');
 
 const profilereg = async (req, res) => {
-    const profile_data ={
-        // clinicid: req.body.id,
-        // image: req.body.img,
-        clinicName: req.body.name,
-        email: req.body.email,
-        address: req.body.address,
-        phonenumber: req.body.phonenumber,
-        alternativenumber: req.body.alternativenumber,
-        city: req.body.city,
-        state: req.body.state,
-        pincode: req.body.pincode,
-        country: req.body.country,
-        bankacnumber: req.body.bank_acNo,
-        ifsc: req.body.ifsc,
-        bankbranch: req.body.bank_brnch,
-        upiid: req.body.upi_id,
-        gst: req.body.gst,
-    };
+  const user = await User.findOne({
+    where: { userToken: req.body.userToken },
+  });
 
-    try {
-        const newprofile = await Profile.create(profile_data);
+  Profile.update(
+    
+    {
+      alternativenumber: req.body.profile.alternativenumber,
+      city: req.body.profile.city,
+      state: req.body.profile.state,
+      pincode: req.body.profile.pincode,
+      country: req.body.profile.country,
+      bankacnumber: req.body.profile.bank_acNo,
+      ifsc: req.body.profile.ifsc,
+      bankbranch:req.body.profile.bank_brnch ,
+      upiid:req.body.profile.upi_id ,
+      gst:req.body.profile.gst ,
 
-        const result = {
-            // fullName: newUser.firstName+' '+newUser.lastName,
-            // clinicid: newUser.clinicid,
-            // image: newprofile.clinicName,
-            clinicName: newprofile.clinicName,
-            email: newprofile.email,
-            address: newprofile.address,
-            phonenumber: newprofile.phonenumber,
-            alternativenumber: newprofile.alternativenumber,
-            city: newprofile.city,
-            state: newprofile.state,
-            pincode: newprofile.pincode,
-            country: newprofile.country,
-            bankacnumber: newprofile.bankacnumber,
-            ifsc: newprofile.ifsc,
-            bankbranch: newprofile.bankbranch,
-            upiid: newprofile.upiid,
-            gst: newprofile.gst,                  
-          };
-          res.send(result);
-        } catch (err) {
-            res.status(500).send({
-              message:
-                err.message || "Some error occurred while creating profile."
-            });
-
+    },
+    {
+      where: {
+        clinicid: user.clinicid
+      }
     }
+  )
+  .then(rowsAffected => {
+    if (rowsAffected[0] === 0) {
+      return res.status(404).send({
+        message: "user not found with token " + req.body.userToken
+      });
+    }
+    res.send({
+      message: "user was updated successfully with token " + req.body.userToken
+    });
+  })
+  .catch(err => {
+    res.status(500).send({
+      message: err.message || "Some error occurred while updating the professional."
+    });
+  });
 };
 
 
