@@ -37,7 +37,7 @@ module.exports = (sequelize, Sequelize) => {
     indexes: [
       {
         unique: true,
-        fields: ['userToken','email'] // Replace with the actual column name being referenced
+        fields: ['userToken','email','clinicid'] // Replace with the actual column name being referenced
       }
     ]
   });

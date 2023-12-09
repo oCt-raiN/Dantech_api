@@ -1,13 +1,13 @@
 const db = require("../../models");
 const config = require("../../config/auth.config");
-const { user,Sequelize } = require("../../models/index");
+const { user, Sequelize } = require("../../models/index");
 const User = db.user;
 const Userinfo = db.userinfo;
 const Professional = db.professional;
-const sequelize =db.sequelize;
+const sequelize = db.sequelize;
 const Profile = db.profile;
 const Admin = db.admin;
-const Profbooking= db.profbooking;
+const Profbooking = db.profbooking;
 const Slot = db.slot;
 const Op = db.Sequelize.Op;
 var jwt = require("jsonwebtoken");
@@ -15,7 +15,7 @@ var bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 //const fetch = require("node-fetch");
 const TokenGenerator = require('uuid-token-generator');
-const tokgen2 = new TokenGenerator(256,TokenGenerator.BASE62);
+const tokgen2 = new TokenGenerator(256, TokenGenerator.BASE62);
 const authvalidation = require('../../validations/auth.validation')
 const emailservice = require('../email.service');
 const { email } = require("../../config/config");
@@ -48,45 +48,52 @@ const register = async (req, res) => {
   //     message: "Admin not found with token " + req.body.adminToken
   //   });
   // }
+  const checkuser = User.findOne({
+    where: {
+      email: req.body.email
+    }
+  });
 
-  const clinic_id = generateUniqueId(); 
-  
+  const clinic_id = generateUniqueId();
+
   const user = {
-  clinicid: clinic_id,
-  clinicName: req.body.name,
-  email: req.body.email,
-  address: req.body.address,
-  phonenumber: req.body.phonenumber,
-  password: bcrypt.hashSync(req.body.password, 8),
-  userToken:tokgen2.generate(),
-};
-
-
-
-try {
-  // Save professional in the database
-  const newUser = await User.create(user);
-  const newprofile = await Profile.create(user);
-  // Exclude the specified fields from the output
-  const result = {
-    // fullName: newUser.firstName+' '+newUser.lastName,
-    // clinicid: newUser.clinicid,
-    clinicName: newUser.clinicName,
-    address: newUser.clinicName,
-    phonenumber: newUser.phonenumber,
-    email: newUser.email,
-    password:newUser.password,
-    userToken: newUser.userToken,
-
+    clinicid: clinic_id,
+    clinicName: req.body.name,
+    email: req.body.email,
+    address: req.body.address,
+    phonenumber: req.body.phonenumber,
+    password: bcrypt.hashSync(req.body.password, 8),
+    userToken: tokgen2.generate(),
   };
 
-  res.send(result);
-} catch (err) {
-  res.status(500).send({
-    message:
-      err.message || "Some error occurred while creating user."
-  });
-}
+
+
+  try {
+    // Save professional in the database
+
+
+    const newUser = await User.create(user);
+    const newprofile = await Profile.create(user);
+    // Exclude the specified fields from the output
+    const result = {
+      // fullName: newUser.firstName+' '+newUser.lastName,
+      // clinicid: newUser.clinicid,
+      clinicName: newUser.clinicName,
+      address: newUser.clinicName,
+      phonenumber: newUser.phonenumber,
+      email: newUser.email,
+      password: newUser.password,
+      userToken: newUser.userToken,
+
+    };
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({
+      message:
+        "Some error occurred while creating user."
+    });
+  }
+
 };
 
 
@@ -125,7 +132,7 @@ const login = async (req, res) => {
     res.status(200).send({
       userToken: user.userToken,
       accessToken,
-      fullName,status,
+      fullName, status,
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -135,136 +142,137 @@ const login = async (req, res) => {
 
 
 
-const getstatus =async (req, res) => {
+const getstatus = async (req, res) => {
 
-  try{
-      const user = await User.findOne({
-          where: { userToken: req.body.userToken },
-        });
+  try {
+    const user = await User.findOne({
+      where: { userToken: req.body.userToken },
+    });
 
-      //   console.log(doctor)
-        const { email, userToken, clinicName, status } = user;
-        const clinicname = `${clinicName}`;
-    
-        res.status(200).send({
-          clinicname,
-          email,
-          userToken,status
-        });
-      } 
-  catch (err) 
-      {
-        res.status(500).send({
-          message: 'Error retrieving status with userToken',
-        });
+    //   console.log(doctor)
+    const { email, userToken, clinicName, status } = user;
+    const clinicname = `${clinicName}`;
+
+    res.status(200).send({
+      clinicname,
+      email,
+      userToken, status
+    });
   }
-  
+  catch (err) {
+    res.status(500).send({
+      message: 'Error retrieving status with userToken',
+    });
+  }
+
 
 };
 
- 
+
 const forgotpassword = async (req, res) => {
-  
+
   User.findOne({
     where: {
-     email: req.body.email
+      email: req.body.email
     }
   })
-  .then(user => {
-   if (!user) {
-     return res.status(404).send({ message: "Email not exists." });
-   } else {
+    .then(user => {
+      if (!user) {
+        return res.status(404).send({ message: "Email not exists." });
+      } else {
 
-  const resetToken = tokgen2.generate();  
+        const resetToken = tokgen2.generate();
 
-   User.update({resetToken : resetToken}, {
-      where: { userToken:user.userToken }
-     
-    }).then(
-      emailservice.sendResetPasswordEmail(user.email,resetToken)
-    )
-       
-    return res.status(200).send({ message: "Reset link send to the registered email id" });
-     
-    }  
- 
- })
- .catch(err => {
-   res.status(500).send({ message: err.message });
- });
- 
+        User.update({ resetToken: resetToken }, {
+          where: { userToken: user.userToken }
+
+        }).then(
+          emailservice.sendResetPasswordEmail(user.email, resetToken)
+        )
+
+        return res.status(200).send({ message: "Reset link send to the registered email id" });
+
+      }
+
+    })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
+
 };
 
 const resetpassword = async (req, res) => {
 
   User.findOne({
     where: {
-     resetToken: req.body.resetToken
+      resetToken: req.body.resetToken
     }
   })
-  .then(user => {
-    console.log(user);
-    if (!user) {
-      return res.status(404).send({ message: "The reset link is not valid" });
-    }
+    .then(user => {
+      console.log(user);
+      if (!user) {
+        return res.status(404).send({ message: "The reset link is not valid" });
+      }
 
-    
-  
-   // Update user with new encrypted password
-    User.update({password : bcrypt.hashSync(req.body.password, 8)}, {
-      where: { userToken:user.userToken }
-     
-    }).then(
-      emailservice.PasswordResetSuccess(user.email,'Password Changed Successfully')
-    )
 
-    return res.status(200).send({ message: "Password Changed successfully" });
 
-  })
-  .catch(err => {
-    res.status(500).send({ message: err.message });
-  });
- 
+      // Update user with new encrypted password
+      User.update({ password: bcrypt.hashSync(req.body.password, 8) }, {
+        where: { userToken: user.userToken }
+
+      }).then(
+        emailservice.PasswordResetSuccess(user.email, 'Password Changed Successfully')
+      )
+
+      return res.status(200).send({ message: "Password Changed successfully" });
+
+    })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
+
 };
 
 const passwordreset = async (req, res) => {
-console.log(req);
+  console.log(req);
   User.findOne({
     where: {
-     resetToken: req.body.resetToken,
+      resetToken: req.body.resetToken,
     }
   })
-  .then(user => {
-    if (!user) {
-      return res.status(404).send({ message: "User is not valid" });
-    }
-   
-  
-   // Update user with new encrypted password
-    User.update({password : bcrypt.hashSync(req.body.password, 8)}, {
-      where: { userToken: req.body.id }
-     
-    }).then(
-      emailservice.PasswordResetSuccess(user.email,'Password Changed Successfully')
-    )
+    .then(user => {
+      if (!user) {
+        return res.status(404).send({ message: "User is not valid" });
+      }
 
-    return res.status(200).send({ message: "Password reset successfully" });
 
-  })
-  .catch(err => {
-    res.status(500).send({ message: err.message });
-  });
- 
-};
- //const conformpassword = async (req, res) => {
-  const allRegisterUser = async (req,res) => {
-    User.findAndCountAll({
-      attributes: { exclude: ['password','id','resetToken','createdAt','updatedAt'] }
+      // Update user with new encrypted password
+      User.update({ password: bcrypt.hashSync(req.body.password, 8) }, {
+        where: { userToken: req.body.id }
+
+      }).then(
+        emailservice.PasswordResetSuccess(user.email, 'Password Changed Successfully')
+      )
+
+      return res.status(200).send({ message: "Password reset successfully" });
+
     })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
+
+};
+//const conformpassword = async (req, res) => {
+const allRegisterUser = async (req, res) => {
+  User.findAndCountAll({
+    attributes: { exclude: ['password', 'id', 'resetToken', 'createdAt', 'updatedAt'] }
+  })
     .then(data => {
       console.log(data);
-      res.send({count: data.count,
-        users: data.rows});
+      res.send({
+        count: data.count,
+        users: data.rows
+      });
     })
     .catch(err => {
       res.status(500).send({
@@ -272,13 +280,13 @@ console.log(req);
           err.message || "Some error occurred while retrieving users."
       });
     });
-  }
-  
-   
+}
+
+
 
 const getAllUser = async (req, res) => {
   const admin = await Admin.findOne({
-    where: { adminToken: req.body.adminToken } ,
+    where: { adminToken: req.body.adminToken },
     attributes: { exclude: ['createdAt', 'updatedAt'] },
   });
   if (!admin) {
@@ -292,7 +300,7 @@ const getAllUser = async (req, res) => {
         model: Userinfo,
         as: 'userDetail',
         where: { userId: Sequelize.col('User.id') }
-        
+
       }
     ]
   })
@@ -306,7 +314,7 @@ const getAllUser = async (req, res) => {
       const formattedUsers = users.map(user => {
         const userDetail = user.userDetail;
         const fullName = `${user.firstName} ${user.lastName}`;
-      
+
         return {
           fullName,
           photo: user.photo,
@@ -315,10 +323,10 @@ const getAllUser = async (req, res) => {
           mobileNumber: userDetail.mobileNumber,
           address: userDetail.address,
           activeInd: userDetail.activeInd,
-          
+
         };
       });
-      
+
 
       res.status(200).send(formattedUsers);
     })
@@ -335,7 +343,7 @@ const getOneUser = async (req, res) => {
     });
 
     const profile = await Profile.findOne({
-      where: { clinicid: user.clinicid}
+      where: { clinicid: user.clinicid }
     });
 
     if (!user) {
@@ -348,10 +356,10 @@ const getOneUser = async (req, res) => {
     const clinicname = `${clinicName}`;
 
     res.status(200).send({
-      clinicname,profile,
+      clinicname, profile,
       photo,
       email,
-      userToken,status
+      userToken, status
     });
   } catch (err) {
     res.status(500).send({
@@ -363,7 +371,7 @@ const getOneUser = async (req, res) => {
 
 const getOneUserAdmin = async (req, res) => {
   const admin = await Admin.findOne({
-    where: { adminToken: req.body.adminToken } ,
+    where: { adminToken: req.body.adminToken },
     attributes: { exclude: ['createdAt', 'updatedAt'] },
   });
   if (!admin) {
@@ -372,7 +380,7 @@ const getOneUserAdmin = async (req, res) => {
     });
   }
   User.findOne({
-    where: { userToken:req.body.userToken },
+    where: { userToken: req.body.userToken },
     include: [
       {
         model: Userinfo,
@@ -383,14 +391,14 @@ const getOneUserAdmin = async (req, res) => {
     .then(User => {
       if (!User) {
         return res.status(404).send({
-          message: 'User not found with userToken 1' 
+          message: 'User not found with userToken 1'
         });
       }
-  
-      const { email, userToken,photo } = User;
+
+      const { email, userToken, photo } = User;
       const userDetail = User.userDetail;
       const fullName = `${User.firstName} ${User.lastName}`;
-  
+
       res.status(200).send({
         fullName,
         photo,
@@ -406,64 +414,64 @@ const getOneUserAdmin = async (req, res) => {
         message: 'Error retrieving User with userToken '
       });
     });
-  
-  }
+
+}
 
 const createuserinfo = async (req, res) => {
   User.findOne({
     where: {
-      userToken:req.body. userToken
+      userToken: req.body.userToken
     }
   })
-  .then(user => {
-    if (!user) {
-      return res.status(401).send({
-        message: "User not found with given token"
-      });
-    }
-    const userId = user.id;
-    Userinfo.findOne({
-      where: {
-        userId: userId
-      }
-    })
-    .then(userInfo => {
-      if (userInfo) {
-        return res.status(400).send({
-          message: "Userinfo already exists for the given User."
+    .then(user => {
+      if (!user) {
+        return res.status(401).send({
+          message: "User not found with given token"
         });
       }
-      Userinfo.create({
-        userId: userId,
-        mobileNumber: req.body.mobileNumber,
-        address: req.body.address
+      const userId = user.id;
+      Userinfo.findOne({
+        where: {
+          userId: userId
+        }
       })
-      .then(createdUserInfo => {
-        const response = {
-          userToken:user.userToken,
-          activeInd: createdUserInfo.activeInd,
-          mobileNumber: createdUserInfo.mobileNumber,
-          address: createdUserInfo.address,
-        };
-        res.send(response);
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || "Some error occurred while creating the Userinfo."
+        .then(userInfo => {
+          if (userInfo) {
+            return res.status(400).send({
+              message: "Userinfo already exists for the given User."
+            });
+          }
+          Userinfo.create({
+            userId: userId,
+            mobileNumber: req.body.mobileNumber,
+            address: req.body.address
+          })
+            .then(createdUserInfo => {
+              const response = {
+                userToken: user.userToken,
+                activeInd: createdUserInfo.activeInd,
+                mobileNumber: createdUserInfo.mobileNumber,
+                address: createdUserInfo.address,
+              };
+              res.send(response);
+            })
+            .catch(err => {
+              res.status(500).send({
+                message: err.message || "Some error occurred while creating the Userinfo."
+              });
+            });
+        })
+        .catch(err => {
+          res.status(500).send({
+            message: err.message || "Some error occurred while retrieving the Userinfo."
+          });
         });
-      });
     })
     .catch(err => {
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving the Userinfo."
+        message: err.message || "Some error occurred while retrieving the User."
       });
     });
-  })
-  .catch(err => {
-    res.status(500).send({
-      message: err.message || "Some error occurred while retrieving the User."
-    });
-  });
 };
 
 const updateuserinfo = async (req, res) => {
@@ -493,7 +501,7 @@ const updateuserinfo = async (req, res) => {
     }
 
     userInfo = await userInfo.update({
-     
+
       mobileNumber: req.body.mobileNumber,
       address: req.body.address
     });
@@ -514,7 +522,7 @@ const updateuserinfo = async (req, res) => {
 
 const updateUser = async (req, res) => {
   User.update(
-    
+
     {
       firstName: req.body.firstName,
       lastName: req.body.lastName
@@ -541,12 +549,12 @@ const updateUser = async (req, res) => {
       });
     });
 };
- 
+
 
 // admin confirm cancel user
 const adminCancelUser = async (req, res) => {
   const user = await User.findOne({
-    where: { userToken: req.body.userToken } ,
+    where: { userToken: req.body.userToken },
     attributes: { exclude: ['createdAt', 'updatedAt'] },
   });
   if (!user) {
@@ -556,7 +564,7 @@ const adminCancelUser = async (req, res) => {
   }
 
   const admin = await Admin.findOne({
-    where: { adminToken: req.body.adminToken } ,
+    where: { adminToken: req.body.adminToken },
     attributes: { exclude: ['createdAt', 'updatedAt'] },
   });
   if (!admin) {
@@ -588,7 +596,7 @@ const adminCancelUser = async (req, res) => {
       message: err.message || 'Some error occurred while creating user.',
     });
   });
-}  
+}
 
 
 // Only count user with activeInd set to 1
@@ -596,7 +604,7 @@ const allUserCount = async (req, res) => {
   try {
     const userCount = await User.count({
       where: {
-        activeInd: 1 
+        activeInd: 1
       }
     });
     res.send({ userCount });
@@ -624,5 +632,5 @@ module.exports = {
   adminCancelUser,
   allUserCount,
   getstatus
- 
+
 };
