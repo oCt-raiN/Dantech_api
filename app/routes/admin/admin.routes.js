@@ -35,6 +35,8 @@ module.exports = app => {
       router.post("/getOneAdmin",admin.getOneAdmin);
       //create user
       router.post("/userregister",admin.createuser)
+      // get users
+      router.post("/getallusers",admin.getallusers)
 
 
       app.use('/api/admin', router);    

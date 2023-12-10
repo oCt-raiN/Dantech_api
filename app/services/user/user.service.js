@@ -2,6 +2,7 @@ const db = require("../../models");
 const config = require("../../config/auth.config");
 const { user, Sequelize } = require("../../models/index");
 const User = db.user;
+const Status = db.status;
 const Userinfo = db.userinfo;
 const Professional = db.professional;
 const sequelize = db.sequelize;
@@ -55,7 +56,9 @@ const register = async (req, res) => {
   });
 
   const clinic_id = generateUniqueId();
-
+  const state = {
+    clinicid: clinic_id,
+  }
   const user = {
     clinicid: clinic_id,
     clinicName: req.body.name,
@@ -71,7 +74,7 @@ const register = async (req, res) => {
   try {
     // Save professional in the database
 
-
+    const userstat = await Status.create(state);
     const newUser = await User.create(user);
     const newprofile = await Profile.create(user);
     // Exclude the specified fields from the output
@@ -342,6 +345,12 @@ const getOneUser = async (req, res) => {
       where: { userToken: req.body.userToken },
     });
 
+    const stat = await Status.findOne({
+      where:{
+        clinicid: user.clinicid
+      }
+    });
+
     const profile = await Profile.findOne({
       where: { clinicid: user.clinicid }
     });
@@ -352,14 +361,14 @@ const getOneUser = async (req, res) => {
       });
     }
 
-    const { email, userToken, photo, clinicName, status } = user;
+    const { email, userToken, photo, clinicName} = user;
     const clinicname = `${clinicName}`;
-
+    const { statuscode } = stat;
     res.status(200).send({
       clinicname, profile,
       photo,
       email,
-      userToken, status
+      userToken, statuscode
     });
   } catch (err) {
     res.status(500).send({

@@ -46,6 +46,9 @@ exports.signin = (req, res) => {
 exports.createAdminInfo = (req, res) => {
   adminService.createAdminInfo(req,res);
 };
+exports.getallusers = (req,res) =>{
+  adminService.getAllUser(req,res);
+}
 exports.updateAdminInfo = (req, res) => {
   adminService.updateAdminInfo(req,res);
 };

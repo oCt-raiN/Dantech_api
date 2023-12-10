@@ -35,6 +35,7 @@ db.surveyResultDetails= require("./surveyResultDetails/surveyResultDetails.model
 db.surveyInfo= require("./surveyInfo/surveyinfo.model.js")(sequelize, Sequelize);
 db.organizationRoll= require("./organizationRoll/organizationRoll.mode.js")(sequelize, Sequelize);
 db.doctor = require("./doctors/doctors.model.js")(sequelize,Sequelize);
+db.status = require("./status/userstatus.model.js")(sequelize,Sequelize);
 db.profile = require("./profile/profiles.model.js")(sequelize,Sequelize);
 
  // SurveyForm to Questions association

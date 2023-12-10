@@ -18,10 +18,6 @@ module.exports = (sequelize, Sequelize) => {
     phonenumber:{
       type: Sequelize.STRING
     },
-    status:{
-      type: Sequelize.STRING,
-      defaultValue: "Waiting",
-    },
     userToken: {
       type: Sequelize.STRING,
       primaryKey: true

@@ -3,12 +3,35 @@ const config = require("../../config/auth.config");
 const Admin=db.admin;
 const Admininfo=db.admininfo;
 const User = db.user;
+const Status = db.status;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const TokenGenerator = require('uuid-token-generator');
 const tokgen2 = new TokenGenerator(256,TokenGenerator.BASE62);
 const emailservice = require('../../services/email.service');
 
+
+
+const getAllUser =async (req, res) =>{
+ try{
+    const admin = await Admin.findOne({
+      where:{
+        adminToken:req.body.userToken
+      }
+    });
+    const user = await User.findAll()
+    const state = await Status.findAll()
+    res.status(200).send({
+      user,state
+    });
+  }
+  catch (err) {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while getting details."
+    });
+  }
+};
 
 
 function generateUniqueId() {
@@ -35,6 +58,9 @@ const userregister = async (req, res) => {
   // }
 
   const clinic_id = generateUniqueId(); 
+  const state = {
+    clinicid: clinic_id
+  }
   
   const user = {
   clinicid: clinic_id,
@@ -47,6 +73,7 @@ const userregister = async (req, res) => {
 };
 
 try {
+  const newstate = await Status.create(state);
   // Save professional in the database
   const newUser = await User.create(user);
   // Exclude the specified fields from the output
@@ -74,7 +101,7 @@ try {
 // register professional
 const register = async (req, res) => {
    const admin = {
-    name: req.body.name,
+    firstName: req.body.name,
     lastName: req.body.lastName,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 8),
@@ -432,6 +459,7 @@ module.exports ={
     updateAdmin,
     createAdminInfo,
     updateAdminInfo,
-    getOneAdmin
+    getOneAdmin,
+    getAllUser
 
 }
