@@ -20,25 +20,27 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
 const db = {};
 
 db.Sequelize = Sequelize;
-db.sequelize = sequelize; 
+db.sequelize = sequelize;
 
 db.user = require("./user/user.model.js")(sequelize, Sequelize);
 db.userinfo = require("./user/userinfo.model.js")(sequelize, Sequelize);
-db.admin = require( "./admin/admin.model")(sequelize,Sequelize);
-db.admininfo = require( "./admin/admininfo.model")(sequelize,Sequelize);
-db.organization = require( "./organization/organization.model")(sequelize,Sequelize);
+db.admin = require("./admin/admin.model")(sequelize, Sequelize);
+db.admininfo = require("./admin/admininfo.model")(sequelize, Sequelize);
+db.organization = require("./organization/organization.model")(sequelize, Sequelize);
 db.surveyForm = require("./surveyForm/surveyForm.model.js")(sequelize, Sequelize);
-db.questions= require("./questions/questions.model.js")(sequelize, Sequelize);
-db.options= require("./options/options.model.js")(sequelize, Sequelize);
-db.surveyResult= require("./surveyResult/surveyResult.model.js")(sequelize, Sequelize);
-db.surveyResultDetails= require("./surveyResultDetails/surveyResultDetails.model.js")(sequelize, Sequelize);
-db.surveyInfo= require("./surveyInfo/surveyinfo.model.js")(sequelize, Sequelize);
-db.organizationRoll= require("./organizationRoll/organizationRoll.mode.js")(sequelize, Sequelize);
-db.doctor = require("./doctors/doctors.model.js")(sequelize,Sequelize);
-db.status = require("./status/userstatus.model.js")(sequelize,Sequelize);
-db.profile = require("./profile/profiles.model.js")(sequelize,Sequelize);
+db.questions = require("./questions/questions.model.js")(sequelize, Sequelize);
+db.options = require("./options/options.model.js")(sequelize, Sequelize);
+db.surveyResult = require("./surveyResult/surveyResult.model.js")(sequelize, Sequelize);
+db.surveyResultDetails = require("./surveyResultDetails/surveyResultDetails.model.js")(sequelize, Sequelize);
+db.surveyInfo = require("./surveyInfo/surveyinfo.model.js")(sequelize, Sequelize);
+db.organizationRoll = require("./organizationRoll/organizationRoll.mode.js")(sequelize, Sequelize);
+db.doctor = require("./doctors/doctors.model.js")(sequelize, Sequelize);
+db.status = require("./status/userstatus.model.js")(sequelize, Sequelize);
+db.order = require("./order/orderform.model.js")(sequelize, Sequelize);
+db.profile = require("./profile/profiles.model.js")(sequelize, Sequelize);
+db.bankdetail = require("./profile/profile_bank.model.js")(sequelize, Sequelize);
 
- // SurveyForm to Questions association
+// SurveyForm to Questions association
 // db.surveyForm.hasMany(db.questions, {
 //   foreignKey: 'surveyFormId',
 //   as: 'questions',
@@ -62,6 +64,20 @@ db.surveyForm.hasMany(db.questions, {
 db.questions.belongsTo(db.surveyForm, {
   foreignKey: 'surveyFormId',
   as: 'surveyForm',
+});
+
+
+
+// SurveyForm to Questions association
+db.user.hasMany(db.status, {
+  foreignKey: 'clinicid',
+  as: 'status',
+});
+
+// Questions to SurveyForm association
+db.status.belongsTo(db.user, {
+  foreignKey: 'clinicid',
+  as: 'user ',
 });
 
 
@@ -118,7 +134,7 @@ db.surveyResultDetails.belongsTo(db.questions, {
 
 // // SurveyResultDetails to Options association
 // db.surveyResultDetails.belongsTo(db.options, {
- 
+
 //   as: 'option',
 // });
 

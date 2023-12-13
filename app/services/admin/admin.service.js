@@ -1,28 +1,92 @@
 const db = require("../../models");
 const config = require("../../config/auth.config");
-const Admin=db.admin;
-const Admininfo=db.admininfo;
+const Admin = db.admin;
+const Admininfo = db.admininfo;
 const User = db.user;
 const Status = db.status;
+const Profile = db.profile;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const TokenGenerator = require('uuid-token-generator');
-const tokgen2 = new TokenGenerator(256,TokenGenerator.BASE62);
+const tokgen2 = new TokenGenerator(256, TokenGenerator.BASE62);
 const emailservice = require('../../services/email.service');
 
 
+const rejectuser = async (req, res) => {
 
-const getAllUser =async (req, res) =>{
- try{
+  const user = await User.findOne({
+    where: { userToken: req.body.userToken },
+  });
+  Status.update(
+    {
+      statuscode: "RJ5000",
+      description: req.body.description.description,
+    },
+    {
+      where: {
+        clinicid: user.clinicid
+      }
+    }
+  ).then(rowsAffected => {
+    if (rowsAffected[0] === 0) {
+      return res.status(404).send({
+        message: "user not found with token " + req.body.userToken
+      });
+    }
+    res.send({
+      message: "user was updated successfully with token " + req.body.userToken
+    });
+  })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while updating the professional."
+      });
+    });
+}
+
+const approveuser = async (req, res) => {
+
+  const user = await User.findOne({
+    where: { userToken: req.body.userToken },
+  });
+  Status.update(
+    {
+      statuscode: "AC2000",
+    },
+    {
+      where: {
+        clinicid: user.clinicid
+      }
+    }
+  ).then(rowsAffected => {
+    if (rowsAffected[0] === 0) {
+      return res.status(404).send({
+        message: "user not found with token " + req.body.userToken
+      });
+    }
+    res.send({
+      message: "user was updated successfully with token " + req.body.userToken
+    });
+  })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while updating the professional."
+      });
+    });
+}
+
+
+const getAllUser = async (req, res) => {
+  try {
     const admin = await Admin.findOne({
-      where:{
-        adminToken:req.body.userToken
+      where: {
+        adminToken: req.body.userToken
       }
     });
     const user = await User.findAll()
     const state = await Status.findAll()
     res.status(200).send({
-      user,state
+      user, state
     });
   }
   catch (err) {
@@ -57,57 +121,57 @@ const userregister = async (req, res) => {
   //   });
   // }
 
-  const clinic_id = generateUniqueId(); 
+  const clinic_id = generateUniqueId();
   const state = {
     clinicid: clinic_id
   }
-  
+
   const user = {
-  clinicid: clinic_id,
-  clinicName: req.body.name,
-  email: req.body.email,
-  address: req.body.address,
-  phonenumber: req.body.phonenumber,
-  password: bcrypt.hashSync(req.body.password, 8),
-  userToken:tokgen2.generate(),
-};
-
-try {
-  const newstate = await Status.create(state);
-  // Save professional in the database
-  const newUser = await User.create(user);
-  // Exclude the specified fields from the output
-  const result = {
-    // fullName: newUser.firstName+' '+newUser.lastName,
-    // clinicid: newUser.clinicid,
-    clinicName: newUser.clinicName,
-    address: newUser.clinicName,
-    phonenumber: newUser.phonenumber,
-    email: newUser.email,
-    password:newUser.password,
-    userToken: newUser.userToken,
-
+    clinicid: clinic_id,
+    clinicName: req.body.name,
+    email: req.body.email,
+    address: req.body.address,
+    phonenumber: req.body.phonenumber,
+    password: bcrypt.hashSync(req.body.password, 8),
+    userToken: tokgen2.generate(),
   };
 
-  res.send(result);
-} catch (err) {
-  res.status(500).send({
-    message:
-      err.message || "Some error occurred while creating user."
-  });
-}
+  try {
+    const userstat = await Status.create(state);
+    const newUser = await User.create(user);
+    const newprofile = await Profile.create(user);
+    // Exclude the specified fields from the output
+    const result = {
+      // fullName: newUser.firstName+' '+newUser.lastName,
+      // clinicid: newUser.clinicid,
+      clinicName: newUser.clinicName,
+      address: newUser.clinicName,
+      phonenumber: newUser.phonenumber,
+      email: newUser.email,
+      password: newUser.password,
+      userToken: newUser.userToken,
+
+    };
+
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while creating user."
+    });
+  }
 };
 
 // register professional
 const register = async (req, res) => {
-   const admin = {
+  const admin = {
     firstName: req.body.name,
     lastName: req.body.lastName,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 8),
-    adminToken:tokgen2.generate(),
+    adminToken: tokgen2.generate(),
   };
-  
+
   try {
     // Save professional in the database
     const newAdmin = await Admin.create(admin);
@@ -117,8 +181,8 @@ const register = async (req, res) => {
       firstName: newAdmin.name,
       email: newAdmin.email,
       token: newAdmin.token,
-      password:newAdmin.password,
-      adminToken:newAdmin.adminToken
+      password: newAdmin.password,
+      adminToken: newAdmin.adminToken
 
     };
 
@@ -138,141 +202,142 @@ const login = async (req, res) => {
       email: req.body.email
     }
   })
-  .then(admin => {
-   if (!admin) {
-     return res.status(404).send({ message: "professional Not found." });
-   }
-   var passwordIsValid = bcrypt.compareSync(
-     req.body.password,
-     admin.password
-   );
-   if (!passwordIsValid) {
-     return res.status(401).send({
-       accessToken: null,
-       message: "Invalid Password!"
-     });
-   }
-   var adminToken = jwt.sign({ id: admin.adminToken }, config.secret, {
-     expiresIn: 86400 // 24 hours
-   });
-   var refreshtoken = jwt.sign({ id: admin.adminToken }, config.secret, {
-    expiresIn: 86400 // 24 hours
- });
-    var fullName=`${admin.firstName} ${admin.lastName}`;
-     res.status(200).send({
-      adminToken: admin.adminToken,
-       accessToken: adminToken,
-       refreshtoken:refreshtoken,
-       fullName:fullName
-      
-     });
-  
- })
- .catch(err => {
-   res.status(500).send({ message: err.message });
- });
-    
- };
-        
- const forgotpassword = async (req, res) => {
-   
+    .then(admin => {
+      if (!admin) {
+        return res.status(404).send({ message: "professional Not found." });
+      }
+      var passwordIsValid = bcrypt.compareSync(
+        req.body.password,
+        admin.password
+      );
+      if (!passwordIsValid) {
+        return res.status(401).send({
+          accessToken: null,
+          message: "Invalid Password!"
+        });
+      }
+      var adminToken = jwt.sign({ id: admin.adminToken }, config.secret, {
+        expiresIn: 86400 // 24 hours
+      });
+      var refreshtoken = jwt.sign({ id: admin.adminToken }, config.secret, {
+        expiresIn: 86400 // 24 hours
+      });
+      var fullName = `${admin.firstName} ${admin.lastName}`;
+      res.status(200).send({
+        adminToken: admin.adminToken,
+        accessToken: adminToken,
+        refreshtoken: refreshtoken,
+        fullName: fullName
+
+      });
+
+    })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
+
+};
+
+const forgotpassword = async (req, res) => {
+
   Admin.findOne({
-  where: {
-   email: req.body.email,
-   adminToken:Admin.adminToken
-  }
-})
-.then(admin => {
- if (!admin) {
-   return res.status(404).send({ message: "Email not exists." });
- } else {
+    where: {
+      email: req.body.email,
+      adminToken: Admin.adminToken
+    }
+  })
+    .then(admin => {
+      if (!admin) {
+        return res.status(404).send({ message: "Email not exists." });
+      } else {
 
-const resetToken = tokgen2.generate();  
+        const resetToken = tokgen2.generate();
 
-Admin.update({resetToken : resetToken}, {
-    where: {adminToken:admin.adminToken }
-   
-  }).then(
-    emailservice.sendResetPasswordEmail(admin.email,resetToken)
-  )
-     
-  return res.status(200).send({ message: "Reset link send to the registered email id" });
-   
-  }  
+        Admin.update({ resetToken: resetToken }, {
+          where: { adminToken: admin.adminToken }
 
-})
-.catch(err => {
- res.status(500).send({ message: err.message });
-});
+        }).then(
+          emailservice.sendResetPasswordEmail(admin.email, resetToken)
+        )
+
+        return res.status(200).send({ message: "Reset link send to the registered email id" });
+
+      }
+
+    })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
 
 };
 
 const resetpassword = async (req, res) => {
 
   Admin.findOne({
-  where: {
-   resetToken: req.body.resetToken
-  }
-})
-.then(admin => {
-  console.log(admin);
-  if (!admin) {
-    return res.status(404).send({ message: "The reset link is not valid" });
-  }
+    where: {
+      resetToken: req.body.resetToken
+    }
+  })
+    .then(admin => {
+      console.log(admin);
+      if (!admin) {
+        return res.status(404).send({ message: "The reset link is not valid" });
+      }
 
-  
 
- // Update user with new encrypted password
- Admin.update({password : bcrypt.hashSync(req.body.password, 8)}, {
-    where: { adminToken:admin.adminToken }
-   
-  }).then(
-    emailservice.PasswordResetSuccess(admin.email,'Password Changed Successfully')
-  )
 
-  return res.status(200).send({ message: "Password Changed successfully" });
+      // Update user with new encrypted password
+      Admin.update({ password: bcrypt.hashSync(req.body.password, 8) }, {
+        where: { adminToken: admin.adminToken }
 
-})
-.catch(err => {
-  res.status(500).send({ message: err.message });
-});
+      }).then(
+        emailservice.PasswordResetSuccess(admin.email, 'Password Changed Successfully')
+      )
+
+      return res.status(200).send({ message: "Password Changed successfully" });
+
+    })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
 
 };
 
 const passwordreset = async (req, res) => {
-//console.log(req);
-Admin.findOne({
-  where: {
-   resetToken: req.body.resetToken
-  }
-})
-.then(admin => {
-  if (!admin) {
-    return res.status(404).send({ message: "User is not valid" });
-  }
- 
+  //console.log(req);
+  Admin.findOne({
+    where: {
+      resetToken: req.body.resetToken
+    }
+  })
+    .then(admin => {
+      if (!admin) {
+        return res.status(404).send({ message: "User is not valid" });
+      }
 
- // Update user with new encrypted password
- Admin.update({password : bcrypt.hashSync(req.body.password, 8)}, {
-    where: { adminToken: req.body.id }
-   
-  }).then(
-    emailservice.PasswordResetSuccess(admin.email,'Password Changed Successfull')
-  )
 
-  return res.status(200).send({ message: "Password reset successfull" });
+      // Update user with new encrypted password
+      Admin.update({ password: bcrypt.hashSync(req.body.password, 8) }, {
+        where: { adminToken: req.body.id }
 
-})
-.catch(err => {
-  res.status(500).send({ message: err.message });
-});
+      }).then(
+        emailservice.PasswordResetSuccess(admin.email, 'Password Changed Successfull')
+      )
 
-};  
+      return res.status(200).send({ message: "Password reset successfull" });
+
+    })
+    .catch(err => {
+      res.status(500).send({ message: err.message });
+    });
+
+};
 
 // update professional
 const updateAdmin = async (req, res) => {
   Admin.update(
-    { photo:req.body.photo, 
+    {
+      photo: req.body.photo,
       firstName: req.body.firstName,
       lastName: req.body.lastName
     },
@@ -289,8 +354,8 @@ const updateAdmin = async (req, res) => {
         });
       }
       res.send({
-        message: "admin was updated successfully."+ req.body.adminToken,
-       
+        message: "admin was updated successfully." + req.body.adminToken,
+
 
       });
     })
@@ -342,7 +407,7 @@ const createAdminInfo = async (req, res) => {
       }],
       attributes: { exclude: ['id', 'adminId', 'updatedAt', 'createdAt'] }
     });
-    
+
     // Change the attributes option to include the token field from the professional model
     const admininfoWithToken = await db.admininfo.findByPk(admininfo.id, {
       include: [{
@@ -351,18 +416,18 @@ const createAdminInfo = async (req, res) => {
       }],
       attributes: { exclude: ['id', 'adminId', 'updatedAt', 'createdAt'] }
     });
-    
+
     if (!admininfoWithToken) {
       return res.status(400).send({
         message: "admin information could not be created."
       });
     }
-    
+
     res.send({
       message: "admin information created successfully.",
       admininfo: admininfoWithToken
     });
-    
+
   } catch (err) {
     console.error(err);
     res.status(500).send({
@@ -400,8 +465,8 @@ const updateAdminInfo = async (req, res) => {
       mobileNumber: req.body.mobileNumber,
       adminId: admin.id
     },
-    { where: { id: admin.id } }
-  );
+      { where: { id: admin.id } }
+    );
 
     if (!Admininfo) {
       return res.status(400).send({
@@ -448,18 +513,20 @@ const getOneAdmin = async (req, res) => {
 };
 
 
-module.exports ={
-    register,
-    login,
-    userregister,
-   //professional password
-    forgotpassword,
-    resetpassword,
-    passwordreset, 
-    updateAdmin,
-    createAdminInfo,
-    updateAdminInfo,
-    getOneAdmin,
-    getAllUser
+module.exports = {
+  register,
+  login,
+  userregister,
+  //professional password
+  forgotpassword,
+  resetpassword,
+  passwordreset,
+  updateAdmin,
+  createAdminInfo,
+  updateAdminInfo,
+  getOneAdmin,
+  getAllUser,
+  rejectuser,
+  approveuser,
 
 }
