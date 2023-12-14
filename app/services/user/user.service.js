@@ -8,6 +8,7 @@ const Professional = db.professional;
 const sequelize = db.sequelize;
 const Profile = db.profile;
 const Admin = db.admin;
+const Bankprofile = db.bankdetail;
 const Profbooking = db.profbooking;
 const Slot = db.slot;
 const Op = db.Sequelize.Op;
@@ -37,6 +38,17 @@ function generateUniqueId() {
   return uniqueId;
 }
 
+
+function concatDataValues(profile, bankdetails) {
+  // Extract the dataValues from each dictionary
+  const profileData = profile.dataValues || {};
+  const bankDetailsData = bankdetails.dataValues || {};
+
+  // Concatenate the dataValues
+  const concatenatedDataValues = { ...profileData, ...bankDetailsData };
+
+  return concatenatedDataValues;
+}
 
 // Create a user
 const register = async (req, res) => {
@@ -73,10 +85,15 @@ const register = async (req, res) => {
 
   try {
     // Save professional in the database
-
-    const userstat = await Status.create(state);
     const newUser = await User.create(user);
+    // console.log(newUser);
+    const userstat = await Status.create(state);
+    // console.log(userstat);
     const newprofile = await Profile.create(user);
+    // console.log(newprofile);
+    const newbankprofile = await Bankprofile.create(state);
+
+
     // Exclude the specified fields from the output
     const result = {
       // fullName: newUser.firstName+' '+newUser.lastName,
@@ -346,14 +363,18 @@ const getOneUser = async (req, res) => {
     });
 
     const stat = await Status.findOne({
-      where:{
+      where: {
         clinicid: user.clinicid
       }
     });
 
-    const profile = await Profile.findOne({
+    const profileo = await Profile.findOne({
       where: { clinicid: user.clinicid }
     });
+    const bankprofile = await Bankprofile.findOne({
+      where: { clinicid: user.clinicid }
+    });
+    const profile = concatDataValues(profileo, bankprofile);
 
     if (!user) {
       return res.status(404).send({
@@ -361,14 +382,14 @@ const getOneUser = async (req, res) => {
       });
     }
 
-    const { email, userToken, photo, clinicName} = user;
+    const { email, userToken, photo, clinicName } = user;
     const clinicname = `${clinicName}`;
-    const { statuscode } = stat;
+    const { statuscode, description } = stat;
     res.status(200).send({
       clinicname, profile,
       photo,
       email,
-      userToken, statuscode
+      userToken, statuscode, description
     });
   } catch (err) {
     res.status(500).send({

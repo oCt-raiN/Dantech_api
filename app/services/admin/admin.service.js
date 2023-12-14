@@ -5,6 +5,7 @@ const Admininfo = db.admininfo;
 const User = db.user;
 const Status = db.status;
 const Profile = db.profile;
+const Bankprofile = db.bankdetail
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const TokenGenerator = require('uuid-token-generator');
@@ -137,9 +138,14 @@ const userregister = async (req, res) => {
   };
 
   try {
-    const userstat = await Status.create(state);
+    // Save professional in the database
     const newUser = await User.create(user);
+    // console.log(newUser);
+    const userstat = await Status.create(state);
+    // console.log(userstat);
     const newprofile = await Profile.create(user);
+    // console.log(newprofile);
+    const newbankprofile = await Bankprofile.create(state);
     // Exclude the specified fields from the output
     const result = {
       // fullName: newUser.firstName+' '+newUser.lastName,

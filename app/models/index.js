@@ -68,17 +68,17 @@ db.questions.belongsTo(db.surveyForm, {
 
 
 
-// SurveyForm to Questions association
-db.user.hasMany(db.status, {
-  foreignKey: 'clinicid',
-  as: 'status',
-});
+// // SurveyForm to Questions association
+// db.user.hasMany(db.status, {
+//   foreignKey: 'clinicid',
+//   as: 'status',
+// });
 
-// Questions to SurveyForm association
-db.status.belongsTo(db.user, {
-  foreignKey: 'clinicid',
-  as: 'user ',
-});
+// // Questions to SurveyForm association
+// db.status.belongsTo(db.user, {
+//   foreignKey: 'clinicid',
+//   as: 'user ',
+// });
 
 
 db.questions.hasMany(db.options, {

@@ -2,16 +2,15 @@ module.exports = (sequelize, Sequelize) => {
   const Userstatus = sequelize.define("status", {
     clinicid: {
       type: Sequelize.STRING,
-      foreignKey: true
+      primaryKey: true
     },
     statuscode: {
       type: Sequelize.STRING,
       defaultValue: "WA4000",
     },
     description: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
     }
-    ,
   }, {
     indexes: [
       {
