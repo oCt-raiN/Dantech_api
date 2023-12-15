@@ -47,6 +47,7 @@ const PasswordResetSuccess = async (to, token) => {
 Your password has been reset successfully`;
   await sendEmail(to, subject, text);
 };
+
 const sendConfirmBookingMail = async (to, firstName, lastName, professional, profbooking, existingSlot, professionalData) => {
   const subject = 'Booking confirmation';
   const text = `Dear ${firstName} ${lastName},
@@ -74,6 +75,39 @@ const sendConfirmBookingMail = async (to, firstName, lastName, professional, pro
       await sendEmail(to, subject, text);
   }
 
+  const userregistermail = async (to,clinicname,clinicid,address,phonenumber) => {
+    const subject = 'Register confirmation';
+    const text = `Dear ${clinicname},
+    Thank you for registering in dantech. please complete your profile to place orders. Clinic was registered with the following details.
+    Clinic unique id: ${clinicid}
+    Email: ${to}
+    Address: ${address}
+    Phone Number: ${phonenumber} 
+
+
+    Thank You,
+    Dantech Organization.
+    `;
+
+
+    await sendEmail(to, subject, text);    
+  }
+
+  const createorderemail = async (to,order_id,doctor_name,doctor_id,clinicname) =>{
+    const subject = 'Order created';
+    const text = `Dear ${clinicname},
+    Thank you for placing order in dantech. Order will be approved within 4-6 working days and you can view the status of the order in your order list.
+    Order Id: ${order_id}
+    Doctor name: ${doctor_name}
+    Doctor Id: ${doctor_id}
+
+    Thank You,
+    Dantech Organization.
+    `;
+    
+    await sendEmail(to, subject, text);   
+  }
+
 
 
 
@@ -84,5 +118,7 @@ module.exports = {
   sendResetPasswordEmail,
   PasswordResetSuccess,
   sendConfirmBookingMail,
-  sendCancelBookingMail
+  sendCancelBookingMail,
+  userregistermail,
+  createorderemail,
 };

@@ -106,6 +106,9 @@ const register = async (req, res) => {
       userToken: newUser.userToken,
 
     };
+
+  emailservice.userregistermail(user.email,user.clinicName,user.clinicid,user.address,user.phonenumber);    
+
     res.send(result);
   } catch (err) {
     res.status(500).send({
