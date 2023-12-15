@@ -5,7 +5,6 @@ module.exports = (sequelize, Sequelize) => {
         },
         clinicid: {
             type: Sequelize.STRING,
-            foreignKey: true
         },
         doctorid: {
             type: Sequelize.STRING
