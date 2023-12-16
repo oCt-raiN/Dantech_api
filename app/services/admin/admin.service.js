@@ -4,6 +4,7 @@ const Admin = db.admin;
 const Admininfo = db.admininfo;
 const User = db.user;
 const Status = db.status;
+const Orderforms = db.order;
 const Profile = db.profile;
 const Bankprofile = db.bankdetail
 var jwt = require("jsonwebtoken");
@@ -18,6 +19,8 @@ const rejectuser = async (req, res) => {
   const user = await User.findOne({
     where: { userToken: req.body.userToken },
   });
+
+  descrip = req.body.description.description;
   Status.update(
     {
       statuscode: "RJ5000",
@@ -34,6 +37,7 @@ const rejectuser = async (req, res) => {
         message: "user not found with token " + req.body.userToken
       });
     }
+    emailservice.rejectedmail(user.email, user.clinicName, user.clinicid, descrip);
     res.send({
       message: "user was updated successfully with token " + req.body.userToken
     });
@@ -65,6 +69,7 @@ const approveuser = async (req, res) => {
         message: "user not found with token " + req.body.userToken
       });
     }
+    emailservice.approvedmail(user.email, user.clinicName, user.clinicid);
     res.send({
       message: "user was updated successfully with token " + req.body.userToken
     });
@@ -94,6 +99,28 @@ const getAllUser = async (req, res) => {
     res.status(500).send({
       message:
         err.message || "Some error occurred while getting details."
+    });
+  }
+};
+
+
+
+const getallorders = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({
+      where: {
+        adminToken: req.body.userToken
+      }
+    });
+    const order = await Orderforms.findAll()
+    res.status(200).send({
+      order
+    });
+  }
+  catch (err) {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while getting order details."
     });
   }
 };
@@ -534,5 +561,6 @@ module.exports = {
   getAllUser,
   rejectuser,
   approveuser,
+  getallorders,
 
 }

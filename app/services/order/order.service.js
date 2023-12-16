@@ -61,9 +61,9 @@ const createorder = async (req, res) => {
         }
 
         const order_id = generateRandomNumber();
-        const checkuser = User.findOne({
+        const checkuser = await User.findOne({
             where: {
-              clinicid: req.body.form.uniqueid
+                clinicid: req.body.form.uniqueid
             }
         });
 
@@ -71,6 +71,12 @@ const createorder = async (req, res) => {
         const neworder = {
             orderid: order_id,
             clinicid: req.body.form.uniqueid,
+            clinicname: req.body.form.clinicname,
+            service: req.body.form.service,
+            orderdate: req.body.form.orderdate,
+            phonenumber: req.body.form.phonenumber,
+            patientname: req.body.form.patientname,
+            doctorname: req.body.form.doctor_name,
             doctorid: req.body.form.doctorid,
             type1: req.body.formdata.result.type1,
             option1: req.body.formdata.result.options1,
@@ -115,8 +121,10 @@ const createorder = async (req, res) => {
             message: "Order has been placed",
         };
 
+        const { email } = checkuser;
         res.status(201).send(result); // 201 Created status for successful creation
-        // emailservice.createorderemail(checkuser.email,order_id,req.body.form.doctor_name,neworder.doctorid,req.body.form.clicname);
+        console.log("Aathi", email);
+        emailservice.createorderemail(email, order_id, neworder.doctorname, neworder.doctorid, neworder.clinicname);
     } catch (err) {
         console.error(err);  // Log the actual error for debugging
 

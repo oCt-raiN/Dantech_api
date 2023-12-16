@@ -39,6 +39,7 @@ module.exports = app => {
   router.post("/getallusers", admin.getallusers)
   router.put("/rejectuser", admin.rejectusers)
   router.put("/approveuser", admin.approveusers)
+  router.post("/getallorder", admin.getallorders)
 
   app.use('/api/admin', router);
 };    

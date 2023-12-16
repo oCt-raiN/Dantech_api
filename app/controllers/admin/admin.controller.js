@@ -70,3 +70,7 @@ exports.rejectusers = (req, res) => {
 exports.approveusers = (req, res) => {
   adminService.approveuser(req, res);
 }
+
+exports.getallorders = (req, res) => {
+  adminService.getallorders(req, res);
+}
