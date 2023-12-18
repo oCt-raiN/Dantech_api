@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
   const User = sequelize.define("user", {
-    clinicid:{
+    clinicid: {
       type: Sequelize.STRING
     },
     clinicName: {
@@ -12,10 +12,10 @@ module.exports = (sequelize, Sequelize) => {
     password: {
       type: Sequelize.STRING
     },
-    address:{
+    address: {
       type: Sequelize.STRING
     },
-    phonenumber:{
+    phonenumber: {
       type: Sequelize.STRING
     },
     userToken: {
@@ -28,12 +28,15 @@ module.exports = (sequelize, Sequelize) => {
     activeInd: {
       type: Sequelize.BOOLEAN,
       defaultValue: 1
+    },
+    accessToken: {
+      type: Sequelize.STRING
     }
   }, {
     indexes: [
       {
         unique: true,
-        fields: ['userToken','email','clinicid'] // Replace with the actual column name being referenced
+        fields: ['userToken', 'email', 'clinicid'] // Replace with the actual column name being referenced
       }
     ]
   });
