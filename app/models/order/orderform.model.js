@@ -132,6 +132,16 @@ module.exports = (sequelize, Sequelize) => {
         option19: {
             type: Sequelize.STRING
         },
+        type20: {
+            type: Sequelize.STRING
+        },
+        option20: {
+            type: Sequelize.STRING
+        },
+        file: {
+            type: Sequelize.STRING
+        }
+
     },
         // {
         //     indexes: [

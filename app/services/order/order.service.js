@@ -112,6 +112,10 @@ const createorder = async (req, res) => {
             option16: req.body.formdata.result.option16,
             type17: "Selected tooth",
             option17: req.body.tooth,
+            type18: "Additional Comments",
+            option18: req.body.form.type18,
+            type19: req.body.formdata.result.type19,
+            option19: req.body.formdata.result.option19,
         };
 
         // Assuming Order is a Sequelize model
