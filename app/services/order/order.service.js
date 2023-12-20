@@ -51,6 +51,16 @@ function generateRandomNumber() {
 
 const createorder = async (req, res) => {
     try {
+        const user = User.findOne({
+            where: {
+                userToken: req.body.userToken,
+            }
+        });
+
+        if (!user) {
+            return res.status(404).send({ message: "User Not found." });
+        }
+
         console.log(req.body);
 
         // Check if req.body and req.body.form are defined
