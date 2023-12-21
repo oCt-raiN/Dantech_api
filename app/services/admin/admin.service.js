@@ -160,6 +160,16 @@ const userregister = async (req, res) => {
   //     message: "Admin not found with token " + req.body.adminToken
   //   });
   // }
+  const checkuser = await User.findOne({
+    where: {
+      email: req.body.email
+    }
+  });
+
+  console.log(checkuser)
+  if (checkuser) {
+    return res.status(404).send({ message: "User Already exist." });
+  }
 
   const clinic_id = generateString();
   const state = {
