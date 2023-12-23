@@ -35,12 +35,12 @@ function generateRandomNumber() {
     // Construct the final random number
     const randomNumber =
         'ORD' +
-        randomTwoDigitNumber1 +
-        randomTwoDigitNumber2 +
-        currentDate +
+        // randomTwoDigitNumber1 +
+        // currentDate +
         currentMonth +
         currentHour +
-        currentMinute;
+        currentMinute +
+        randomTwoDigitNumber2;
 
     return randomNumber;
 }
