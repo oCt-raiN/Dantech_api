@@ -15,7 +15,7 @@ module.exports = app => {
     // router.post("/createorder", (req, res) => {
     //     console.log(req.body);
     // });
-
+    router.post("/getallorders", order.getallorders)
 
     app.use('/api/order', router);
 };      

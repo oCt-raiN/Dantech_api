@@ -3,6 +3,9 @@ module.exports = (sequelize, Sequelize) => {
         orderid: {
             type: Sequelize.STRING,
         },
+        ordertoken: {
+            type: Sequelize.STRING,
+        },
         clinicid: {
             type: Sequelize.STRING,
         },

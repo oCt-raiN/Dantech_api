@@ -81,6 +81,7 @@ const createorder = async (req, res) => {
         const neworder = {
             orderid: order_id,
             clinicid: req.body.form.uniqueid,
+            ordertoken: tokgen2.generate(),
             clinicname: req.body.form.clinicname,
             service: req.body.form.service,
             orderdate: req.body.form.orderdate,
@@ -159,7 +160,64 @@ const createorder = async (req, res) => {
     }
 };
 
+const getAllOrder = async (req, res) => {
+    try {
+        const admin = Admin.findOne({
+            where: {
+                adminToken: req.body.adminToken
+            }
+        })
+
+        if (!admin) {
+            return res.status(404).send({
+                message: "Cannot find admin"
+            })
+        }
+        const orders = await Order.findAll()
+        res.status(200).send({
+            orders, adminToken
+        })
+
+
+    } catch (err) {
+        res.status(500).send({
+            message: "Some error occurred while creating order.",
+        });
+    }
+};
+
+const getOneorder = async (req, res) => {
+    try {
+        const admin = Admin.findOne({
+            where: {
+                adminToken: req.body.adminToken,
+            }
+        });
+
+        if (!admin) {
+            res.status(404).send({
+                message: "Admin cannot be found!!",
+            })
+        }
+
+        const order = await Order.findOne({
+            where: {
+                ordertoken: req.body.ordertoken,
+            }
+        })
+        res.status(200).send({
+            order
+        })
+    } catch (err) {
+        res.status(500).send({
+            message: "Some error occured while getting orders"
+        })
+    }
+
+}
 
 module.exports = {
     createorder,
+    getAllOrder,
+    getOneorder,
 };
